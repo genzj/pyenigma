@@ -174,6 +174,12 @@ class Plugboard(dict):
         super().__setitem__(k2,v1)
 
 class Rotor:
+    """
+    Rotor(dict[, str]) -> New Rotor instance follows path
+    in the given dict. Rotor moving from any of chars in 
+    str to next leads to the increasing of higher rotor.
+    See incr(...) for more.
+    """
     def __init__(self,keytable,notch='Z'):
         self.key=keytable
         self.notch=notch
@@ -182,23 +188,57 @@ class Rotor:
         self.chain(None,None)
 
     def chain(self,higher=None,lower=None):
+        """
+        chain(higher->Rotor, lower->Rotor) -> None
+
+        Connect rotor to its neighbours. See incr(...) for
+        more.
+        """
         self.higher=higher
         self.lower=lower
 
     def reset(self):
+        """
+        reset() -> None
+
+        Reset rotation offset to 0 and clear the carry flag.
+        """
         self.offset=0
         self.carry=False
 
     def move(self,offset='A',start='A'):
+        """
+        move(offset->char, start->char) -> None
+
+        From start, rotate to char specified by offset.
+        """
         self.reset()
         self.offset=(ord(offset)-ord(start))%len(self.key)
 
     def transitchar(self,c,forward=True):
+        """
+        transitchar(str, bool) -> None
+
+        Transit the first character in the given string 
+        with key table of current rotor. 
+
+        The given bool indicates transit direction, from
+        plugboard side to reflector side if it's True, 
+        or conversely if it's False.
+        """
         tab=self.key if forward else self.rev
         ret=tab[c[0]]
         return ret
 
     def incr(self,i=1):
+        """
+        incr(int) -> None
+
+        Rotate rotor specified steps. If higher neighbour
+        is set before, it will also be moved if current 
+        rotor move from any of characters in notch to anything
+        else.
+        """
         while i>0:
             self.offset+=1
             i-=1
@@ -212,6 +252,11 @@ class Rotor:
 
 
     def __len__(self):
+        """
+        len(Rotor) -> int
+
+        Length of key table in this rotor.
+        """
         return len(self.key)
 
 class Enigma:
