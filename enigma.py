@@ -198,7 +198,7 @@ class Rotor:
         while i>0:
             self.offset+=1
             i-=1
-            if Tool.charoffset('',self.offset - 1) in self.notch:
+            if Tool.charat(self.offset - 1) in self.notch:
                 self.carry=True
                 if self.higher: self.higher.incr()
             else:
