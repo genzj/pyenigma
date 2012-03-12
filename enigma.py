@@ -144,6 +144,10 @@ class Plugboard(dict):
     prior to setting 'A'->'B' and 'B'->'A'.
     """
     def __setitem__(self,k,v):
+        if k not in self.keys():
+            super().__setitem__(k,k)
+        if v not in self.keys():
+            super().__setitem__(v,v)
         if self[k] == v: return
         self._reset(k)
         self._reset(v)
