@@ -1,17 +1,66 @@
 class Tool:
+    """
+    Tool 
+
+    An assistant class contains constants and static method.
+    """
     alphabet=tuple([chr(i) for i in range(ord('a'),ord('z')+1)])
     ALPHABET=tuple([i.upper() for i in alphabet])
     
     @staticmethod
     def charat(i,tab=ALPHABET):
+        """
+        charat(int, iteratable) -> char
+
+        Get the i-th char of tab, if i is larger than
+        length of tab, i is set to i%len(tab).
+        """
         return tab[i%len(tab)]
 
     @staticmethod
     def charoffset(c,offset,tab=ALPHABET):
+        """
+        charoffset(char, int, iteratable) -> char
+
+        From the given char c, move forward for offset
+        characters and return the target character.
+
+        If c is None or "", calculation will be started
+        from the beginning of tab, equivalent to method
+        charat(...).
+        
+        If the sum of index of c and offset is larger
+        than length of tab, only the reminder of 
+        dividing sum to length will be kept.
+
+        Raise IndexError if c is not in tab.
+        """
         if not c: c=tab[0]
         return Tool.charat(tab.index(c)+offset)
 
 class RotorFactory:
+    """
+    RotorFactory
+
+    A factory composes rotors and reflectors with common
+    key combinations.
+
+    Currently 8 types of rotors and 5 types of reflectors
+    are preloaded into factory class.
+
+    To register custom key sets, simply add them to class
+    __dict__ like following example:
+        RotorFactory.KEYmy={'keytable':dict(zip(Tool.ALPHABET,
+        'UVWXYZOPQRSTHIJKLMNABCDEFG')), 'notch':'G'}
+    Thus you can get your customized rotor by NewRotor('my')
+
+    With respect to reflectors, since they are not about
+    to move during cipher process and thus no notch 
+    required, only key dict required:
+        RotorFactory.REFLECTORmy=dict(zip(Tool.ALPHABET,
+        'ZYXWVUTSRQPONMLKJIHGFEDCBA'))
+    And get this kind of reflector by NewReflector('my')
+    """
     KEYI={'keytable':dict(zip(Tool.ALPHABET,'EKMFLGDQVZNTOWYHXUSPAIBRCJ')),
           'notch':'Q'}
 
@@ -47,12 +96,53 @@ class RotorFactory:
     REFLECTORC_Thin=dict(zip(Tool.ALPHABET,'RDOBJNTKVEHMLFCWZAXGYIPSUQ'))
 
     def NewReflector(name):
+        """
+        NewReflector(str) -> Rotor
+
+        Get a new instance of registered reflector 
+        instance by its name.
+
+        A dict indicates key reflecting relationship 
+        with name "REFLECTORname" must exist in namespace
+        of this factory class.
+        """
         return Rotor(getattr(RotorFactory,'REFLECTOR{}'.format(name)))
 
     def NewRotor(name):
+        """
+        NewRotor(str) -> Rotor
+
+        Get a new instance of registered rotor instance 
+        by its name.
+
+        A with following structure
+            {'keytable':dict, 'notch':str}
+        with name "KEYname" must exist in namespace
+        of this factory class.
+        """
         return Rotor(**(getattr(RotorFactory,'KEY{}'.format(name))))
 
 class Plugboard(dict):
+    # TODO validate symmetry of each connection in __init__
+    """
+    Plugboard() -> new empty Plugboard
+    Plugboard(mapping) -> new Plugboard initialized from a mapping object's
+        (key, value) pairs
+    Plugboard(iterable) -> new Plugboard initialized as if via:
+        d = {}
+        for k, v in iterable:
+            d[k] = v
+    Plugboard(**kwargs) -> new Plugboard initialized with the name=value pairs
+        in the keyword argument list.  For example:  Plugboard('A'='Z', 'B'='Y')
+
+    Changes to relationship of two keys are implemented 
+    symmetrically by swapping involved keys. For example,
+    `plugboard['A']='Z'` will connect 'A' to 'Z' as well as
+    'Z' to 'A' if both 'A' and 'Z' haven't been connected
+    to any other letters yet. Then going on executing 
+    `plugboard['A']='B'` restores 'A'->'A' and 'Z'->'Z'
+    prior to setting 'A'->'B' and 'B'->'A'.
+    """
     def __setitem__(self,k,v):
         if self[k] == v: return
         self._reset(k)
@@ -60,10 +150,20 @@ class Plugboard(dict):
         self._swap(k,v)
 
     def _reset(self,k):
+        """
+        _reset(char) -> None
+
+        Reset the given key back to itself.
+        """
         v = self[k]
         if v != k: self._swap(k,v)
 
     def _swap(self,k1,k2):
+        """
+        _swap(char, char) -> None
+
+        Swap connection of the two given keys.
+        """
         if k1 == k2: return
         v1,v2 = self[k1],self[k2]
         super().__setitem__(k1,v2)
